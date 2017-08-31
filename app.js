@@ -52,14 +52,32 @@ var app = function(app, http) {
 
             req.end();
         }
+
     telegram.on("text", (message) => {
         let msg = message.text.toLowerCase(),
             decision = new Promise((resolve, reject) => {
                 if (msg.indexOf("/hellobot") === 0) {
                     resolve("Hello " + message.chat.first_name + ". How many I help you?");
-                } else if (msg.indexOf("/timings") === 0) {
+                } else if (msg.indexOf("/start") === 0) {
                     resolve("Let us begin! Specify the stop and service number. Example: \"Bus 15 at 83139\".");
-                } else {
+                } else if (msg.indexOf("/location") === 0) {
+					var option = {
+					        "parse_mode": "Markdown",
+					        "reply_markup": {
+					            "one_time_keyboard": true,
+					            "keyboard": [[{
+					                text: "My location",
+					                request_location: true
+					            }], ["Cancel"]]
+					        }
+					    };
+				    telegram.sendMessage(message.chat.id, "where are you?", option).then(() => {
+						// Handle location
+						telegram.once("location",(msg)=>{
+					    	// telegram.sendMessage(msg.chat.id, "We will deliver your order to " + [msg.location.longitude,msg.location.latitude].join(";"));
+						});
+				    });
+				} else {
                     identifyAssets(msg).then(function(res) {
                         if (res !== null) {
                             let root = "datamall2.mytransport.sg",
