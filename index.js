@@ -12,7 +12,7 @@ var express = require('express')
 /* Importing the function from app.js and parsing app(express instance).
    Refer to app.js to find out about the files that are being required.
 */
-require("./app.js")(app);
+require("./app.js")(app, http);
 
 // Initializing the server when server.js is being executed
 http.createServer(app).listen(app.get('port'), function(){
