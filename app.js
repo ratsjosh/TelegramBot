@@ -58,7 +58,7 @@ var app = function(app, http) {
                 if (msg.indexOf("/hellobot") === 0) {
                     resolve("Hello " + message.chat.first_name + ". How many I help you?");
                 } else if (msg.indexOf("/timings") === 0) {
-                    resolve("Let us begin! Specify the stop and service number. Example: \"Bus 166 at 17504\".");
+                    resolve("Let us begin! Specify the stop and service number. Example: \"Bus 15 at 83139\".");
                 } else {
                     identifyAssets(msg).then(function(res) {
                         if (res !== null) {
@@ -67,20 +67,24 @@ var app = function(app, http) {
                             httpGetAsync(root, path, function(data) {
                                 let result = JSON.parse(data),
                                     services = result.Services;
-								// Retrieving the respective estimated bus timings
-                                for (let i = 0; i < services.length; i++) {
-									let service = services[i],
-										now = new Date();
-									const busTimings = new Object();
-									busTimings.nextBus = new Date(service.NextBus.EstimatedArrival);
-									busTimings.nextBus2 = new Date(service.NextBus2.EstimatedArrival);
-									resolve("Bus 15 - Next bus: " + Math.round((((busTimings.nextBus - now) % 86400000) % 3600000) / 60000) + " min, "
-									+ "Subsequent bus: " + Math.round((((busTimings.nextBus2 - now) % 86400000) % 3600000) / 60000) + " min");
-                                }
+									if(services.length > 0) {
+										// Retrieving the respective estimated bus timings
+		                                for (let i = 0; i < services.length; i++) {
+											let service = services[i],
+												now = new Date();
+											const busTimings = new Object();
+											busTimings.nextBus = new Date(service.NextBus.EstimatedArrival);
+											busTimings.nextBus2 = new Date(service.NextBus2.EstimatedArrival);
+											resolve("Bus 15 - Next bus: " + Math.round((((busTimings.nextBus - now) % 86400000) % 3600000) / 60000) + " min, "
+											+ "Subsequent bus: " + Math.round((((busTimings.nextBus2 - now) % 86400000) % 3600000) / 60000) + " min");
+		                                }
+									} else {
+										resolve("Invalid bus/stop number.");
+									}
                             });
                         } else {
                             // Other queries that has not been catered to.
-                            resolve("Please type /help to see the commands you can use.");
+                            resolve("Type /timings to begin.");
                         }
                     });
                 }
