@@ -74,7 +74,7 @@ var app = function(app, http) {
 				    telegram.sendMessage(message.chat.id, "where are you?", option).then(() => {
 						// Handle location
 						telegram.once("location",(msg)=>{
-					    	// telegram.sendMessage(msg.chat.id, "We will deliver your order to " + [msg.location.longitude,msg.location.latitude].join(";"));
+					    	telegram.sendMessage(msg.chat.id, "Recieved location: " + [MSG.location.longitude,msg.location.latitude].join(";"));
 						});
 				    });
 				} else {
@@ -85,6 +85,7 @@ var app = function(app, http) {
                             httpGetAsync(root, path, function(data) {
                                 let result = JSON.parse(data),
                                     services = result.Services;
+                                    console.log(result);
 									if(services.length > 0) {
 										// Retrieving the respective estimated bus timings
 		                                for (let i = 0; i < services.length; i++) {
@@ -97,7 +98,7 @@ var app = function(app, http) {
 											+ "Subsequent bus: " + Math.round((((busTimings.nextBus2 - now) % 86400000) % 3600000) / 60000) + " min");
 		                                }
 									} else {
-										resolve("Invalid bus/stop number.");
+										resolve("Unable to retreive bus data. Check if the bus/stop number is correct and that the bus operating hours is still valid.");
 									}
                             });
                         } else {
