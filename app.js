@@ -1,7 +1,7 @@
 var app = function(app, http) {
     var TelegramBot = require('node-telegram-bot-api'),
         // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
-        telegram = new TelegramBot("340965091:AAHNKChTKxpwOZXBgkoCO99gS6Z2DH_6QyU", {
+        telegram = new TelegramBot("393548032:AAF8Nb8zwj5vP92pF1xwP9D0piF5AUBbK9U", {
             polling: true
         });
 
