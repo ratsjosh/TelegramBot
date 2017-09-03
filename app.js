@@ -94,7 +94,7 @@ var app = function(app, http) {
 											const busTimings = new Object();
 											busTimings.nextBus = new Date(service.NextBus.EstimatedArrival);
 											busTimings.nextBus2 = new Date(service.NextBus2.EstimatedArrival);
-											resolve("Bus 15 - Next bus: " + Math.round((((busTimings.nextBus - now) % 86400000) % 3600000) / 60000) + " min, "
+											resolve("Bus " + service.ServiceNo + " - Next bus: " + Math.round((((busTimings.nextBus - now) % 86400000) % 3600000) / 60000) + " min, "
 											+ "Subsequent bus: " + Math.round((((busTimings.nextBus2 - now) % 86400000) % 3600000) / 60000) + " min");
 		                                }
 									} else {
