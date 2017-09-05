@@ -6,6 +6,7 @@ var TelegramBotMaster = function(app, http) {
         bus = new _bus(),
         // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
         // Debug bot: 420264755:AAHcfQag15DYw58cgFpouwyEqP5UNEKVasY
+        // Hosted bot: 393548032:AAF8Nb8zwj5vP92pF1xwP9D0piF5AUBbK9U
         telegram = new TelegramBot("393548032:AAF8Nb8zwj5vP92pF1xwP9D0piF5AUBbK9U", {
             polling: true
         });
@@ -19,22 +20,10 @@ var TelegramBotMaster = function(app, http) {
     telegram.on("text", (message) => {
         let msg = message.text.toLowerCase(),
             decision = new Promise((resolve, reject) => {
-                var option = {
-                    "parse_mode": "Markdown",
-                    "reply_markup": {
-                        "one_time_keyboard": true,
-                        "keyboard": [
-                            [{
-                                text: "My location",
-                                request_location: true
-                            }]
-                        ]
-                    }
-                };
                 if (msg.indexOf("/hellobot") === 0) {
-                    resolve("Hello " + message.chat.first_name + ". How many I help you?", option);
+                    resolve("Hello " + message.chat.first_name + ". How many I help you?");
                 } else if (msg.indexOf("/start") === 0) {
-                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".", option);
+                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
                 } else if (msg.indexOf("/search") === 0) {
                     bus.identifyAssets(msg.replace("/search", "").trim()).then(function(res) {
                         if (res !== undefined) {
@@ -56,20 +45,32 @@ var TelegramBotMaster = function(app, http) {
                                         nextBus = nextBus <= 1 ? "Arriving" : nextBus += " min";
                                         subBus = subBus <= 1 ? "Arriving" : subBus += " min";
                                         resolve("Bus " + service.ServiceNo + " - Next bus: " + nextBus + ", " +
-                                            "Subsequent bus: " + subBus, option);
+                                            "Subsequent bus: " + subBus);
                                     }
                                 } else {
-                                    resolve("Unable to retreive bus data. Check if the bus/stop number is correct and that the bus operating hours is still valid.", option);
+                                    resolve("Unable to retreive bus data. Check if the bus/stop number is correct and that the bus operating hours is still valid.");
                                 }
                             });
                         } else {
                             // Other queries that has not been catered to.
-                            resolve("Type /start to begin.", option);
+                            resolve("Type /start to begin.");
                         }
                     });
                 }
             });
-        decision.then((res, option) => {
+        decision.then((res) => {
+            var option = {
+                "parse_mode": "Markdown",
+                "reply_markup": {
+                    "resize_keyboard": true,
+                    "keyboard": [
+                        [{
+                            text: "My location",
+                            request_location: true
+                        }]
+                    ]
+                }
+            };
             telegram.sendMessage(message.chat.id, res, option);
         });
     });
