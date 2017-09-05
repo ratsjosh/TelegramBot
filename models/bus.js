@@ -5,8 +5,9 @@ class Bus {
    	}
 
    	time(_nextBus, _nextBus2) {
-		this.nextBus = _nextBus;
-		this.nextBus2 = _nextBus2;
+        let now = new Date();
+		this.nextBus = Math.round((((_nextBus - now) % 86400000) % 3600000) / 60000);
+		this.nextBus2 = Math.round((((_nextBus2 - now) % 86400000) % 3600000) / 60000);
 		return this;
    	}
 

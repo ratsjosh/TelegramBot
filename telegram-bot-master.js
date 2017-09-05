@@ -26,7 +26,7 @@ var TelegramBotMaster = function(app, http) {
                     resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
                 } else if (msg.indexOf("/search") === 0) {
                     bus.identifyAssets(msg.replace("/search", "").trim()).then(function(res) {
-                        if (res !== undefined) {
+                        if (res !== undefined && res.stop !== undefined && res.service !== undefined) {
                             let root = "datamall2.mytransport.sg",
                                 path = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop + "&ServiceNo=" + res.service,
                                 headers = {accept: 'application/json', AccountKey: 'VfAAnVl4S4q+i1l4KzlLQg=='};   
@@ -38,17 +38,34 @@ var TelegramBotMaster = function(app, http) {
                                     // Retrieving the respective estimated bus timings
                                     for (let i = 0; i < services.length; i++) {
                                         let service = services[i],
-                                            now = new Date(),
                                             busTimes = bus.time(new Date(service.NextBus.EstimatedArrival), new Date(service.NextBus2.EstimatedArrival)),
-                                            nextBus = Math.round((((busTimes.nextBus - now) % 86400000) % 3600000) / 60000),
-                                            subBus = Math.round((((busTimes.nextBus2 - now) % 86400000) % 3600000) / 60000);
-                                        nextBus = nextBus <= 1 ? "Arriving" : nextBus += " min";
-                                        subBus = subBus <= 1 ? "Arriving" : subBus += " min";
-                                        resolve("Bus " + service.ServiceNo + " - Next bus: " + nextBus + ", " +
-                                            "Subsequent bus: " + subBus);
+                                            nextBus = busTimes.nextBus <= 1 ? "_Arriving_" : busTimes.nextBus += " min";
+                                            subBus = busTimes.nextBus2 <= 1 ? "_Arriving_" : busTimes.nextBus2 += " min";
+                                        resolve("*Bus " + service.ServiceNo + "*\nNext bus: " + nextBus + ", " + "\nSubsequent bus: " + subBus);
                                     }
                                 } else {
                                     resolve("Unable to retreive bus data. Check if the bus/stop number is correct and that the bus operating hours is still valid.");
+                                }
+                            });
+                        } else if(res !== undefined && res.stop !== undefined) {
+                           let root = "datamall2.mytransport.sg",
+                                path = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop,
+                                headers = {accept: 'application/json', AccountKey: 'VfAAnVl4S4q+i1l4KzlLQg=='};   
+                            protocols.httpGetAsync(root, path, headers, function(data) {
+                                let result = JSON.parse(data),
+                                    stopNo = result.BusStopID,
+                                    services = result.Services,
+                                    msg = "";
+                                if (services.length > 0) {
+                                    // Retrieving the respective estimated bus timings
+                                    for (let i = 0; i < services.length; i++) {
+                                        let service = services[i],
+                                            busTimes = bus.time(new Date(service.NextBus.EstimatedArrival), new Date(service.NextBus2.EstimatedArrival)),
+                                            nextBus = busTimes.nextBus <= 1 ? "_Arriving_" : busTimes.nextBus += " min";
+                                            subBus = busTimes.nextBus2 <= 1 ? "_Arriving_" : busTimes.nextBus2 += " min";
+                                        msg += "*Bus " + service.ServiceNo + "*\nNext bus: " + nextBus + ", " + "\nSubsequent bus: " + subBus + "\n\n";
+                                    }
+                                    resolve(msg); 
                                 }
                             });
                         } else {

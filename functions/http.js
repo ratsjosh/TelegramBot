@@ -14,8 +14,12 @@ Protocol.prototype.httpGetAsync = function(root, path, headers, callback) {
             headers: headers
         },
         req = this._http.request(options, function(res) {
-            res.on('data', function(data) {
-                callback(data);
+            var body = '';
+            res.on('data', function(chunk) {
+                body += chunk;
+            });
+            res.on('end', function() {
+                callback(body);
             });
         });
 
