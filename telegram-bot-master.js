@@ -15,7 +15,7 @@ var TelegramBotMaster = function(app, http) {
                 if (msg.indexOf("/hellobot") === 0) {
                     resolve("Hello " + message.chat.first_name + ". How many I help you?");
                 } else if (msg.indexOf("/start") === 0) {
-                    resolve("Let us begin! Specify the stop and service number. Example: \"Bus 15 at 83139\".");
+                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
                 } else if (msg.indexOf("/location") === 0) {
                     var option = {
                         "parse_mode": "Markdown",
