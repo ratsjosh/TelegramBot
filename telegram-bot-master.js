@@ -12,12 +12,7 @@ var TelegramBotMaster = function(app, http) {
     telegram.on("text", (message) => {
         let msg = message.text.toLowerCase(),
             decision = new Promise((resolve, reject) => {
-                if (msg.indexOf("/hellobot") === 0) {
-                    resolve("Hello " + message.chat.first_name + ". How many I help you?");
-                } else if (msg.indexOf("/start") === 0) {
-                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
-                } else if (msg.indexOf("/location") === 0) {
-                    var option = {
+                var option = {
                         "parse_mode": "Markdown",
                         "reply_markup": {
                             "one_time_keyboard": true,
@@ -30,15 +25,19 @@ var TelegramBotMaster = function(app, http) {
                             ]
                         }
                     };
-                    telegram.sendMessage(message.chat.id, "Where are you?", option).then(() => {
-                        // Handle location
-                        telegram.once("location", (msg) => {
-                            telegram.sendMessage(msg.chat.id, "Recieved location: " + [msg.location.longitude, msg.location.latitude].join(";"));
-                            
-                        });
+                telegram.sendMessage(message.chat.id, "Where are you heading?", option).then(() => {
+                    // Handle location
+                    telegram.once("location", (msg) => {
+                        telegram.sendMessage(msg.chat.id, "Recieved location: " + [msg.location.longitude, msg.location.latitude].join(";"));
+                        
                     });
-                } else {
-                    bus.identifyAssets(msg).then(function(res) {
+                });     
+                if (msg.indexOf("/hellobot") === 0) {
+                    resolve("Hello " + message.chat.first_name + ". How many I help you?");
+                } else if (msg.indexOf("/start") === 0) {
+                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
+                } else if (msg.indexOf("/search") === 0) {
+                    bus.identifyAssets(msg.replace("/search", "").trim()).then(function(res) {
                         if (res !== undefined) {
                             let root = "datamall2.mytransport.sg",
                                 path = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop + "&ServiceNo=" + res.service,
@@ -52,8 +51,8 @@ var TelegramBotMaster = function(app, http) {
                                     for (let i = 0; i < services.length; i++) {
                                         let service = services[i],
                                             now = new Date(),
-                                            busTimes = bus.time(new Date(service.NextBus.EstimatedArrival), new Date(service.NextBus2.EstimatedArrival));
-                                        let nextBus = Math.round((((busTimes.nextBus - now) % 86400000) % 3600000) / 60000),
+                                            busTimes = bus.time(new Date(service.NextBus.EstimatedArrival), new Date(service.NextBus2.EstimatedArrival)),
+                                            nextBus = Math.round((((busTimes.nextBus - now) % 86400000) % 3600000) / 60000),
                                             subBus = Math.round((((busTimes.nextBus2 - now) % 86400000) % 3600000) / 60000);
                                         nextBus = nextBus <= 1 ? "Arriving" : nextBus += " min";
                                         subBus = subBus <= 1 ? "Arriving" : subBus += " min";

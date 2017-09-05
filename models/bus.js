@@ -28,7 +28,7 @@ class Bus {
                 if (busObj.service != "" && busObj.stop != "") {
                     resolve(busObj);
                 } else {
-                    resolve(null);
+                    resolve(undefined);
                 }
             }
         });
