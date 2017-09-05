@@ -9,33 +9,32 @@ var TelegramBotMaster = function(app, http) {
         telegram = new TelegramBot("393548032:AAF8Nb8zwj5vP92pF1xwP9D0piF5AUBbK9U", {
             polling: true
         });
+
+    // Handle location
+    telegram.on("location", (msg) => {
+        telegram.sendMessage(msg.chat.id, "Recieved location: " + [msg.location.longitude, msg.location.latitude].join(";"));
+        
+    });
+
     telegram.on("text", (message) => {
         let msg = message.text.toLowerCase(),
             decision = new Promise((resolve, reject) => {
                 var option = {
-                        "parse_mode": "Markdown",
-                        "reply_markup": {
-                            "one_time_keyboard": true,
-                            "keyboard": [
-                                [{
-                                    text: "My location",
-                                    request_location: true
-                                }],
-                                ["Cancel"]
-                            ]
-                        }
-                    };
-                telegram.sendMessage(message.chat.id, "Where are you heading?", option).then(() => {
-                    // Handle location
-                    telegram.once("location", (msg) => {
-                        telegram.sendMessage(msg.chat.id, "Recieved location: " + [msg.location.longitude, msg.location.latitude].join(";"));
-                        
-                    });
-                });     
+                    "parse_mode": "Markdown",
+                    "reply_markup": {
+                        "one_time_keyboard": true,
+                        "keyboard": [
+                            [{
+                                text: "My location",
+                                request_location: true
+                            }]
+                        ]
+                    }
+                };
                 if (msg.indexOf("/hellobot") === 0) {
-                    resolve("Hello " + message.chat.first_name + ". How many I help you?");
+                    resolve("Hello " + message.chat.first_name + ". How many I help you?", option);
                 } else if (msg.indexOf("/start") === 0) {
-                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
+                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".", option);
                 } else if (msg.indexOf("/search") === 0) {
                     bus.identifyAssets(msg.replace("/search", "").trim()).then(function(res) {
                         if (res !== undefined) {
@@ -57,21 +56,21 @@ var TelegramBotMaster = function(app, http) {
                                         nextBus = nextBus <= 1 ? "Arriving" : nextBus += " min";
                                         subBus = subBus <= 1 ? "Arriving" : subBus += " min";
                                         resolve("Bus " + service.ServiceNo + " - Next bus: " + nextBus + ", " +
-                                            "Subsequent bus: " + subBus);
+                                            "Subsequent bus: " + subBus, option);
                                     }
                                 } else {
-                                    resolve("Unable to retreive bus data. Check if the bus/stop number is correct and that the bus operating hours is still valid.");
+                                    resolve("Unable to retreive bus data. Check if the bus/stop number is correct and that the bus operating hours is still valid.", option);
                                 }
                             });
                         } else {
                             // Other queries that has not been catered to.
-                            resolve("Type /start to begin.");
+                            resolve("Type /start to begin.", option);
                         }
                     });
                 }
             });
-        decision.then((res) => {
-            telegram.sendMessage(message.chat.id, res);
+        decision.then((res, option) => {
+            telegram.sendMessage(message.chat.id, res, option);
         });
     });
 }
