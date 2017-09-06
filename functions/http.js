@@ -19,7 +19,7 @@ Protocol.prototype.httpGetAsync = function(root, path, headers, callback) {
                 body += chunk;
             });
             res.on('end', function() {
-                callback(body);
+                callback(JSON.parse(body));
             });
         });
 

@@ -1,17 +1,14 @@
 class Bus {
-	constructor() {
-		this.stop = null;
-		this.service = null;
-   	}
-
-   	time(_nextBus, _nextBus2) {
+    constructor(_stop, _service, _nextBus, _nextBus2) {
+        this.stop = _stop !== null ? _stop : null;
+        this.service = _service;
         let now = new Date();
-		this.nextBus = Math.round((((_nextBus - now) % 86400000) % 3600000) / 60000);
-		this.nextBus2 = Math.round((((_nextBus2 - now) % 86400000) % 3600000) / 60000);
+		this.nextBus = _nextBus != null ? Math.round((((_nextBus - now) % 86400000) % 3600000) / 60000) : null;
+		this.nextBus2 = _nextBus2 != null ? Math.round((((_nextBus2 - now) % 86400000) % 3600000) / 60000) : null;
 		return this;
    	}
 
-	identifyAssets(msg) {
+	static identifyAssets(msg) {
         return new Promise(function(resolve, reject) {
             if (msg != null) {
                 // Test if the user has specified the stop and service number with the use of Regular Expressions(Regex).
