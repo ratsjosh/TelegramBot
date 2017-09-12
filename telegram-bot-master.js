@@ -1,10 +1,8 @@
-var TelegramBotMaster = function(app, http) {
+const path = require('path');
+
+var TelegramBotMaster = function(app) {
         // Require protocol module to handle HTTP request(s)
     var _protocols = require('./functions/http.js'),
-        protocols = new _protocols(http),
-        
-        // Require fs module to async read files in local project
-        _fs = require('fs'),
 
         // Require bus module to init. and utilize function(s) related to a bus object
         _bus = require('./models/bus.js'),
@@ -21,30 +19,67 @@ var TelegramBotMaster = function(app, http) {
             polling: true
         });
 
-        busStops = [];
+	const busStops = require(path.resolve('./data/busStop.js')).getBusStops(),
+		  sendMessage = function(msg, val) {
+		  	var option = {
+                "parse_mode": "Markdown",
+                "reply_markup": {
+                    "resize_keyboard": true,
+                    "keyboard": [
+                        [{
+                            text: "My location",
+                            request_location: true
+                        }]
+                    ]
+                }
+            };
+            telegram.sendMessage(msg.chat.id, val, option);
+		  };        
 
-    var populateBusStops = function() {
-        _fs.readFile('./data/bus-stops.json', 'utf8', function (err, data) {
-            if (err) {
-                throw err; 
-            }
-            busStops = JSON.parse(data);
+	// Handle location
+	telegram.on("location", (msg) => {
+	    // sendMessage(msg, "Recieved location: " + [msg.location.longitude, msg.location.latitude].join(";"));
+	    // Store closest coordinate
+	    let location = {lng: msg.location.longitude, lat: msg.location.latitude}, 
+	    closest = busStops[0],
+		closest_distance = require(path.resolve('./data/busStop.js')).distance(closest, location);
+		for (var i = 1; i < busStops.length; i++) {
+		    if (require(path.resolve('./data/busStop.js')).distance(busStops[i], location) < closest_distance) {
+		        closest_distance = require(path.resolve('./data/busStop.js')).distance(busStops[i], location);
+		        closest = busStops[i];
+		    }
+		}
+		let root = "datamall2.mytransport.sg",
+            busApiPath = "/ltaodataservice/BusArrivalv2?BusStopCode=" + closest.no,
+            headers = {accept: 'application/json', AccountKey: 'VfAAnVl4S4q+i1l4KzlLQg=='};   
+        _protocols.httpGetAsync(root, busApiPath, headers, function(data) {
+        	let stopNo = data.BusStopID,
+            services = data.Services,
+            buses = [];
+	        if (services.length > 0) {
+	            // Retrieving the respective estimated bus timings
+	            for (let i = 0; i < services.length; i++) {
+	                let service = services[i],
+	                    bus = {};
+	                if(service.NextBus.EstimatedArrival.length > 0 && service.NextBus2.EstimatedArrival.length > 0) {
+	                    bus = new _bus(closest.no, service.ServiceNo, new Date(service.NextBus.EstimatedArrival), new Date(service.NextBus2.EstimatedArrival));
+	                } else {
+	                    bus = new _bus(closest.no, service.ServiceNo, null, null);
+	                }
+	                buses.push(bus);
+	            }
+	            sendMessage(msg, _messageFactory.formulateBusTimings(buses)); 
+	        }
+	        else {
+	            sendMessage(msg, _messageFactory.formulateError()); 
+	        }
         });
-    }
-
-    populateBusStops();
-
-    // Handle location
-    telegram.on("location", (msg) => {
-        telegram.sendMessage(msg.chat.id, "Recieved location: " + [msg.location.longitude, msg.location.latitude].join(";"));
-        
-    });
+	});
 
     telegram.on("text", (message) => {
         // A simple check in case busStops array has not been poplated.
         if(busStops.length == 0) {
             console.log("Bus stops unprepared popluation process initiated.");
-            populateBusStops();
         }
         let msg = message.text.toLowerCase(),
             decision = new Promise((resolve, reject) => {
@@ -56,9 +91,9 @@ var TelegramBotMaster = function(app, http) {
                     _bus.identifyAssets(msg.replace("/search", "").trim()).then(function(res) {
                         if (res !== undefined && res.stop !== undefined && res.service !== undefined) {
                             let root = "datamall2.mytransport.sg",
-                                path = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop + "&ServiceNo=" + res.service,
+                                busApiPath = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop + "&ServiceNo=" + res.service,
                                 headers = {accept: 'application/json', AccountKey: 'VfAAnVl4S4q+i1l4KzlLQg=='};   
-                            protocols.httpGetAsync(root, path, headers, function(data) {
+                            _protocols.httpGetAsync(root, busApiPath, headers, function(data) {
                                 	let stopNo = data.BusStopID,
                                         services = data.Services;
                                 if (services.length > 0) {
@@ -77,9 +112,9 @@ var TelegramBotMaster = function(app, http) {
                             });
                         } else if(res !== undefined && res.stop !== undefined) {
                             let root = "datamall2.mytransport.sg",
-                                path = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop,
+                                busApiPath = "/ltaodataservice/BusArrivalv2?BusStopCode=" + res.stop,
                                 headers = {accept: 'application/json', AccountKey: 'VfAAnVl4S4q+i1l4KzlLQg=='};   
-                            protocols.httpGetAsync(root, path, headers, function(data) {
+                            _protocols.httpGetAsync(root, busApiPath, headers, function(data) {
                                 let stopNo = data.BusStopID,
                                     services = data.Services,
                                     buses = [];
@@ -107,19 +142,7 @@ var TelegramBotMaster = function(app, http) {
             });
 
         decision.then((res) => {
-            var option = {
-                "parse_mode": "Markdown",
-                "reply_markup": {
-                    "resize_keyboard": true,
-                    "keyboard": [
-                        [{
-                            text: "My location",
-                            request_location: true
-                        }]
-                    ]
-                }
-            };
-            telegram.sendMessage(message.chat.id, res, option);
+            sendMessage(message, res);
         });
     });
 }
