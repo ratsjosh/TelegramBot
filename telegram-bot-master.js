@@ -51,7 +51,7 @@ var TelegramBotMaster = function(app, http) {
                 if (msg.indexOf("/hellobot") === 0) {
                     resolve("Hello " + message.chat.first_name + ". How many I help you?");
                 } else if (msg.indexOf("/start") === 0) {
-                    resolve("Let us begin! Specify the service and stop number. Example: \"Bus 15 at 83139\".");
+                    resolve("Let us begin! Type /search <stop No.> or <service no.> at <stop No.> \n*Examples*: \n\"/search 83139\"\n\"/search Bus 15 at 83139\"");
                 } else if (msg.indexOf("/search") === 0) {
                     _bus.identifyAssets(msg.replace("/search", "").trim()).then(function(res) {
                         if (res !== undefined && res.stop !== undefined && res.service !== undefined) {
