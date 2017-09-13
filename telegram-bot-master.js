@@ -15,7 +15,7 @@ var TelegramBotMaster = function(app) {
         // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
         // Debug bot: 420264755:AAHcfQag15DYw58cgFpouwyEqP5UNEKVasY
         // Hosted bot: 393548032:AAF8Nb8zwj5vP92pF1xwP9D0piF5AUBbK9U
-        telegram = new TelegramBot("420264755:AAHcfQag15DYw58cgFpouwyEqP5UNEKVasY", {
+        telegram = new TelegramBot("393548032:AAF8Nb8zwj5vP92pF1xwP9D0piF5AUBbK9U", {
             polling: true
         });
 
