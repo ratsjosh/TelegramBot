@@ -1,6 +1,7 @@
 const fs = require('fs');
 
-let bus_stops = [];
+let bus_stops = [],
+    bus_stops_map;
 
 function toRadians(value) {
     return value * Math.PI / 180;
@@ -9,10 +10,15 @@ function toRadians(value) {
 module.exports = {
     init: () => {
         bus_stops = JSON.parse(fs.readFileSync('./data/bus-stops.json', 'utf8'));
+        bus_stops_map = new Map(bus_stops.map((i) => [i.no, i]));
     },
 
     getBusStops: () => {
         return bus_stops;
+    },
+
+    getBusStopsMap: () => {
+         return bus_stops_map;
     },
 
     distance: (position1, position2) => {

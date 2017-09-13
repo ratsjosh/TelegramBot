@@ -1,6 +1,6 @@
 var message = {
-	formulateBusTimings: function(buses) {
-		let msg = "";
+	formulateBusTimings: function(stop, buses) {
+		let msg = "\u{1F68F}*" + stop + "*\n";
 		for(let i = 0; i < buses.length; i++) {
 			let bus = buses[i],
 				nextBus = "Not in operation",
@@ -10,7 +10,7 @@ var message = {
 				nextBus = bus.nextBus <= 1 ? "_Arriving_" : bus.nextBus += " min",
 		        subBus = bus.nextBus2 <= 1 ? "_Arriving_" : bus.nextBus2 += " min";
 	        }
-	        msg += "*Bus " + serviceNo + "*\nNext bus: " + nextBus + ", " + "\nSubsequent bus: " + subBus + "\n\n";
+	        msg += "\u{1F68C} *Bus " + serviceNo + "*\nNext bus: " + nextBus + ", " + "\nSubsequent bus: " + subBus + "\n\n";
 		}
 		return msg;
 	},
@@ -22,7 +22,7 @@ var message = {
 			nextBus = bus.nextBus <= 1 ? "_Arriving_" : bus.nextBus += " min",
 	        subBus = bus.nextBus2 <= 1 ? "_Arriving_" : bus.nextBus2 += " min";
         }
-		return "*Bus " + serviceNo + "*\nNext bus: " + nextBus + ", " + "\nSubsequent bus: " + subBus;
+		return "\u{1F68C} *Bus " + serviceNo + "*\nNext bus: " + nextBus + ", " + "\nSubsequent bus: " + subBus;
 	},
 
 	formulateError: function() {

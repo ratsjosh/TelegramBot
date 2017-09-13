@@ -20,6 +20,7 @@ var TelegramBotMaster = function(app) {
         });
 
 	const busStops = require(path.resolve('./data/busStop.js')).getBusStops(),
+          busStopsMap = require(path.resolve('./data/busStop.js')).getBusStopsMap(),
 		  sendMessage = function(msg, val) {
 		  	var option = {
                 "parse_mode": "Markdown",
@@ -68,7 +69,7 @@ var TelegramBotMaster = function(app) {
 	                }
 	                buses.push(bus);
 	            }
-	            sendMessage(msg, _messageFactory.formulateBusTimings(buses)); 
+	            sendMessage(msg, _messageFactory.formulateBusTimings(busStopsMap.get(closest.no).name, buses)); 
 	        }
 	        else {
 	            sendMessage(msg, _messageFactory.formulateError()); 
@@ -130,7 +131,7 @@ var TelegramBotMaster = function(app) {
                                         }
                                         buses.push(bus);
                                     }
-                                    resolve(_messageFactory.formulateBusTimings(buses)); 
+                                    resolve(_messageFactory.formulateBusTimings(busStopsMap.get(res.no).name, buses)); 
                                 }
                             });
                         } else {
