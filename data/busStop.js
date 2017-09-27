@@ -1,4 +1,8 @@
-const fs = require('fs');
+const fs = require('fs'),
+    _protocols = require('../functions/http.js'),
+    // Require messageFactory to produce the appropriate message for the respective request(s)
+    _messageFactory = require('../factories/messageFactory.js'),
+    _bus = require('../models/bus.js');
 
 let bus_stops = [],
     bus_stops_map;
@@ -18,26 +22,55 @@ module.exports = {
     },
 
     getBusStopsMap: () => {
-         return bus_stops_map;
+        return bus_stops_map;
     },
 
+    createBusReply: (onPremiseBusStops, callback) => {
+        let root = "datamall2.mytransport.sg",
+            busApiPath = "/ltaodataservice/BusArrivalv2?BusStopCode=",
+            headers = {
+                accept: 'application/json',
+                AccountKey: 'VfAAnVl4S4q+i1l4KzlLQg=='
+            },
+            message = '';
+
+        for (let j = 0; j < onPremiseBusStops.length; j++) {
+            _protocols.httpGetAsync(root, busApiPath + onPremiseBusStops[j].no, headers, function(data) {
+                let stopNo = data.BusStopID,
+                    services = data.Services,
+                    buses = [];
+                if (services.length > 0) {
+                    // Retrieving the respective estimated bus timings
+                    for (let i = 0; i < services.length; i++) {
+                        let service = services[i],
+                            bus = {};
+                        if (service.NextBus.EstimatedArrival.length > 0 && service.NextBus2.EstimatedArrival.length > 0) {
+                            bus = new _bus(onPremiseBusStops[j].no, service.ServiceNo, new Date(service.NextBus.EstimatedArrival), new Date(service.NextBus2.EstimatedArrival));
+                        } else {
+                            bus = new _bus(onPremiseBusStops[j].no, service.ServiceNo, null, null);
+                        }
+                        buses.push(bus);
+                    }
+                    message += _messageFactory.formulateBusTimings(onPremiseBusStops[j], buses);
+                }
+                if(j + 1 == onPremiseBusStops.length) {
+                    callback(message);
+                }
+            });
+        }
+    },
+
+    // Source: https://stackoverflow.com/questions/27928/calculate-distance-between-two-latitude-longitude-points-haversine-formula
     distance: (position1, position2) => {
-        const lat1 = position1.lat,
-            lat2 = position2.lat,
-            lon1 = position1.lng,
-            lon2 = position2.lng,
-            R = 6371000, // metres
-            φ1 = toRadians(lat1),
-            φ2 = toRadians(lat2),
-            Δφ = toRadians(lat2 - lat1),
-            Δλ = toRadians(lon2 - lon1);
-
-        var a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        var R = 6371; // Radius of the earth in km
+        var dLat = toRadians(position2.lat - position1.lat); // deg2rad below
+        var dLon = toRadians(position2.lng - position1.lng);
+        var a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(position1.lat)) * Math.cos(toRadians(position2.lat)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        var d = R * c;
+        var d = R * c; // Distance in km
         return d;
     }
 }
